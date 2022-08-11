@@ -4,6 +4,7 @@
 #
 # Instructions:
 # Download build script: wget https://raw.githubusercontent.com/linux-on-ibm-z/scripts/master/RocksDB/v6.19.3/build_rocksdb.sh
+# Download build script: wget https://raw.githubusercontent.com/cbn-devops/scripts/master/RocksDB/v5.18.4/build_rocksdb.sh
 # Execute build script: bash build_rocksdb.sh    (provide -h for help)
 #
 
@@ -11,7 +12,7 @@ set -e -o pipefail
 
 PACKAGE_NAME="rocksdb"
 PACKAGE_VERSION="v5.18.4"
-PATCH_URL="https://raw.githubusercontent.com/linux-on-ibm-z/scripts/master/RocksDB/${PACKAGE_VERSION}/patch"
+PATCH_URL="https://raw.githubusercontent.com/cbn-devops/scripts/master/RocksDB/${PACKAGE_VERSION}/patch"
 FORCE="false"
 TESTS="false"
 CURDIR="$(pwd)"
