@@ -11,7 +11,7 @@ set -e -o pipefail
 
 PACKAGE_NAME="rocksdb"
 PACKAGE_VERSION="v6.20.3"
-PATCH_URL="https://raw.github.ibm.com/ZaaS/cp4a-common-automation/rocksdb/RocksDB/${PACKAGE_VERSION}/patch"
+PATCH_URL="https://raw.githubusercontent.com/cbn-devops/scripts/master/RocksDB/${PACKAGE_VERSION}/patch"
 FORCE="false"
 TESTS="false"
 CURDIR="$(pwd)"
