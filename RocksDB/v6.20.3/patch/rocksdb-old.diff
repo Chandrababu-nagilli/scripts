@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 7c14a741b..4d6ea6b37 100644
+index 5d9b4b64a..0abffb06e 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -259,6 +259,14 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64|AARCH64")
+@@ -267,6 +267,13 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64|AARCH64")
    endif(HAS_ARMV8_CRC)
  endif(CMAKE_SYSTEM_PROCESSOR MATCHES "arm64|aarch64|AARCH64")
  
@@ -13,11 +13,10 @@ index 7c14a741b..4d6ea6b37 100644
 +  endif(HAS_S390X_MARCH_NATIVE)
 +endif(CMAKE_SYSTEM_PROCESSOR MATCHES "s390x")
 +
-+
  option(PORTABLE "build a portable binary" OFF)
  option(FORCE_SSE42 "force building with SSE4.2, even when PORTABLE=ON" OFF)
  option(FORCE_AVX "force building with AVX, even when PORTABLE=ON" OFF)
-@@ -284,12 +292,17 @@ if(PORTABLE)
+@@ -292,12 +299,17 @@ if(PORTABLE)
      if(FORCE_AVX2)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2 -mbmi -mlzcnt")
      endif()
@@ -37,10 +36,10 @@ index 7c14a741b..4d6ea6b37 100644
      endif()
    endif()
 diff --git a/Makefile b/Makefile
-index 2a0e0f7e8..26b2d783f 100644
+index 274864378..a1913f6e7 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -1951,7 +1951,7 @@ JAVA_INCLUDE = -I$(JAVA_HOME)/include/ -I$(JAVA_HOME)/include/linux
+@@ -1997,7 +1997,7 @@ JAVA_INCLUDE = -I$(JAVA_HOME)/include/ -I$(JAVA_HOME)/include/linux
  ifeq ($(PLATFORM), OS_SOLARIS)
  	ARCH := $(shell isainfo -b)
  else ifeq ($(PLATFORM), OS_OPENBSD)
@@ -49,11 +48,20 @@ index 2a0e0f7e8..26b2d783f 100644
  		ARCH := 64
  	else
  		ARCH := 32
+@@ -2017,7 +2017,7 @@ ifneq ($(origin JNI_LIBC), undefined)
+   JNI_LIBC_POSTFIX = -$(JNI_LIBC)
+ endif
+ 
+-ifneq (,$(filter ppc% arm64 aarch64 sparc64, $(MACHINE)))
++ifneq (,$(filter ppc% s390x arm64 aarch64 sparc64, $(MACHINE)))
+ 	ROCKSDBJNILIB = librocksdbjni-linux-$(MACHINE)$(JNI_LIBC_POSTFIX).so
+ else
+ 	ROCKSDBJNILIB = librocksdbjni-linux$(ARCH)$(JNI_LIBC_POSTFIX).so
 diff --git a/build_tools/build_detect_platform b/build_tools/build_detect_platform
-index b63790578..ac40f7d34 100755
+index 1d5138dbf..00bc50794 100755
 --- a/build_tools/build_detect_platform
 +++ b/build_tools/build_detect_platform
-@@ -632,13 +632,24 @@ if test "0$PORTABLE" -eq 0; then
+@@ -638,13 +638,19 @@ if test "0$PORTABLE" -eq 0; then
      # Tune for this POWER processor, treating '+' models as base models
      POWER=`LD_SHOW_AUXV=1 /bin/true | grep AT_PLATFORM | grep -E -o power[0-9]+`
      COMMON_FLAGS="$COMMON_FLAGS -mcpu=$POWER -mtune=$POWER "
@@ -72,27 +80,22 @@ index b63790578..ac40f7d34 100755
 +      COMMON_FLAGS="$COMMON_FLAGS -march=z196 "
 +    fi
 +    COMMON_FLAGS="$COMMON_FLAGS"
-+#  elif test -n "`echo $TARGET_ARCHITECTURE | grep ^riscv64`"; then
-+#    RISC_ISA=$(cat /proc/cpuinfo | grep -E '^isa\s*:' | head -1 | cut --delimiter=: -f 2 | cut -b 2-)
-+#    if [ -n "${RISCV_ISA}" ]; then
-+#      COMMON_FLAGS="$COMMON_FLAGS -march=${RISC_ISA}"
-+#    fi
    elif [ "$TARGET_OS" == "IOS" ]; then
      COMMON_FLAGS="$COMMON_FLAGS"
    elif [ "$TARGET_OS" == "AIX" ] || [ "$TARGET_OS" == "SunOS" ]; then
-@@ -654,7 +665,9 @@ else
-   if test "$USE_SSE"; then
+@@ -661,6 +667,10 @@ else
      TRY_SSE_ETC="1"
    fi
--
+ 
 +  if test -n "`echo $TARGET_ARCHITECTURE | grep ^s390x`"; then
-+  COMMON_FLAGS="$COMMON_FLAGS -march=z196 "
++    COMMON_FLAGS="$COMMON_FLAGS -march=z196 "
 +  fi
++
    if [[ "${PLATFORM}" == "OS_MACOSX" ]]; then
      # For portability compile for macOS 10.12 (2016) or newer
      COMMON_FLAGS="$COMMON_FLAGS -mmacosx-version-min=10.12"
 diff --git a/db/db_properties_test.cc b/db/db_properties_test.cc
-index 8945ee291..6224086fc 100644
+index 8ff4a30b0..fbe74f3f3 100644
 --- a/db/db_properties_test.cc
 +++ b/db/db_properties_test.cc
 @@ -213,7 +213,7 @@ void VerifySimilar(uint64_t a, uint64_t b, double bias) {
@@ -115,10 +118,10 @@ index 8945ee291..6224086fc 100644
    }
  }
 diff --git a/db/version_set_test.cc b/db/version_set_test.cc
-index eb8e313e7..3f3e5fa90 100644
+index 90088100c..8475dffa8 100644
 --- a/db/version_set_test.cc
 +++ b/db/version_set_test.cc
-@@ -1881,7 +1881,7 @@ class VersionSetAtomicGroupTest : public VersionSetTestBase,
+@@ -1889,7 +1889,7 @@ class VersionSetAtomicGroupTest : public VersionSetTestBase,
          });
      SyncPoint::GetInstance()->SetCallBack(
          "VersionEditHandlerBase::Iterate:Finish", [&](void* arg) {
@@ -127,7 +130,7 @@ index eb8e313e7..3f3e5fa90 100644
          });
      SyncPoint::GetInstance()->SetCallBack(
          "AtomicGroupReadBuffer::AddEdit:AtomicGroup",
-@@ -1921,7 +1921,7 @@ class VersionSetAtomicGroupTest : public VersionSetTestBase,
+@@ -1929,7 +1929,7 @@ class VersionSetAtomicGroupTest : public VersionSetTestBase,
    bool first_in_atomic_group_ = false;
    bool last_in_atomic_group_ = false;
    int num_edits_in_atomic_group_ = 0;
@@ -137,7 +140,7 @@ index eb8e313e7..3f3e5fa90 100644
    VersionEdit edit_with_incorrect_group_size_;
    std::unique_ptr<log::Writer> log_writer_;
 diff --git a/java/src/main/java/org/rocksdb/util/Environment.java b/java/src/main/java/org/rocksdb/util/Environment.java
-index e994506fb..a108dd3ee 100644
+index b5de34b75..a2b9e23c8 100644
 --- a/java/src/main/java/org/rocksdb/util/Environment.java
 +++ b/java/src/main/java/org/rocksdb/util/Environment.java
 @@ -106,7 +106,7 @@ public class Environment {
@@ -150,14 +153,13 @@ index e994506fb..a108dd3ee 100644
          return String.format("%sjni-linux%s%s", name, arch, getLibcPostfix());
        }
 diff --git a/monitoring/statistics.h b/monitoring/statistics.h
-index f633aa4ef..5d5d74a89 100644
+index 9ad108763..20661777f 100644
 --- a/monitoring/statistics.h
 +++ b/monitoring/statistics.h
-@@ -95,8 +95,9 @@ class StatisticsImpl : public Statistics {
-     void operator delete(void *p) { port::cacheline_aligned_free(p); }
+@@ -100,7 +100,9 @@ class StatisticsImpl : public Statistics {
      void operator delete[](void *p) { port::cacheline_aligned_free(p); }
    };
--
+ 
 +#ifndef TEST_CACHE_LINE_SIZE
    static_assert(sizeof(StatisticsData) % CACHE_LINE_SIZE == 0, "Expected " TOSTRING(CACHE_LINE_SIZE) "-byte aligned");
 +#endif
@@ -165,7 +167,7 @@ index f633aa4ef..5d5d74a89 100644
    CoreLocalArray<StatisticsData> per_core_stats_;
  
 diff --git a/port/port_posix.h b/port/port_posix.h
-index 90f131e13..4210b6a41 100644
+index 291139764..c98c34e7f 100644
 --- a/port/port_posix.h
 +++ b/port/port_posix.h
 @@ -190,7 +190,11 @@ extern void InitOnce(OnceType* once, void (*initializer)());
@@ -219,7 +221,7 @@ index 2a404b91d..2d3717aad 100644
  
  //  Memory locations within the same cache line are subject to constructive
 diff --git a/util/bloom_test.cc b/util/bloom_test.cc
-index 660e56611..fc2af83e4 100644
+index 7b1dee2a5..dbde584b3 100644
 --- a/util/bloom_test.cc
 +++ b/util/bloom_test.cc
 @@ -552,7 +552,8 @@ TEST_P(FullBloomTest, OptimizeForMemory) {
@@ -233,7 +235,7 @@ index 660e56611..fc2af83e4 100644
  
      int64_t ex_min_total_size = int64_t{FLAGS_bits_per_key} * total_keys / 8;
 diff --git a/util/compression.h b/util/compression.h
-index 5ce419c9c..32beffb39 100644
+index 207f9949e..a58b2b575 100644
 --- a/util/compression.h
 +++ b/util/compression.h
 @@ -1136,7 +1136,11 @@ inline CacheAllocationPtr LZ4_Uncompress(const UncompressionInfo& info,
