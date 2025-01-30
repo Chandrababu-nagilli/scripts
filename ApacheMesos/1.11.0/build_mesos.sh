@@ -1,5 +1,5 @@
 #!/bin/bash
-# © Copyright IBM Corporation 2021, 2022.
+# © Copyright IBM Corporation 2021, 2024.
 # LICENSE: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 #
 # Instructions:
@@ -74,10 +74,10 @@ function configureAndInstall() {
     if [[ "$ID" == "ubuntu" && "$JAVA_FLAV" == "ibmsdk" ]]  ;then
     	printf -- "Installing IBM SDK 8 for Ubuntu \n"
         cd "$CURDIR"
-        wget http://public.dhe.ibm.com/ibmdl/export/pub/systems/cloud/runtimes/java/8.0.7.11/linux/s390x/ibm-java-s390x-sdk-8.0-7.11.bin
-        echo -en 'INSTALLER_UI=silent\nUSER_INSTALL_DIR=/opt/java-1.8.0-ibm\nLICENSE_ACCEPTED=TRUE' > installer.properties
-        sudo bash ibm-java-s390x-sdk-8.0-7.11.bin -i silent -f installer.properties
-	export JAVA_HOME=/opt/java-1.8.0-ibm
+        wget https://public.dhe.ibm.com/ibmdl/export/pub/systems/cloud/runtimes/java/8.0.8.30/linux/s390x/ibm-java-sdk-8.0-8.30-linux-s390x.tgz
+	sudo mkdir -p /opt/java-1.8.0-ibm
+	sudo tar -C /opt/java-1.8.0-ibm -xvzf ibm-java-sdk-8.0-8.30-linux-s390x.tgz
+	export JAVA_HOME=/opt/java-1.8.0-ibm/ibm-java-s390x-80
     fi
     
     # Installing AdoptOpenJDK8 + OpenJ9
@@ -317,15 +317,15 @@ case "$DISTRO" in
     printf -- "Installing dependencies... it may take some time.\n"
 	if [[ "$JAVA_FLAV" == "openjdk" ]]; then
 		printf -- "\nOpenJDK dependencies\n" |& tee -a "$LOG_FILE"
-		sudo zypper install --auto-agree-with-licenses -y autoconf which bzip2 curl cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-openjdk-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-xml python-six subversion-devel tar wget zlib-devel gawk gzip |& tee -a "$LOG_FILE"
+		sudo zypper install --auto-agree-with-licenses -y autoconf which bzip2 curl libnghttp2-devel cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-openjdk-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-xml python-six subversion-devel tar wget zlib-devel gawk gzip |& tee -a "$LOG_FILE"
 	        export JAVA_HOME=/usr/lib64/jvm/java-1.8.0
 	elif [[ "$JAVA_FLAV" == "ibmsdk" ]]; then
 	        printf -- "\nIBMSDK dependencies\n" |& tee -a "$LOG_FILE"
-		sudo zypper install --auto-agree-with-licenses -y autoconf bzip2 curl cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-ibm-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-six subversion-devel tar wget zlib-devel gawk gzip which |& tee -a "$LOG_FILE"
+		sudo zypper install --auto-agree-with-licenses -y autoconf bzip2 curl libnghttp2-devel cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-ibm-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-six subversion-devel tar wget zlib-devel gawk gzip which |& tee -a "$LOG_FILE"
 	        export JAVA_HOME=/usr/lib64/jvm/java-1.8.0-ibm
 	elif [[ "$JAVA_FLAV" == "adoptjdk" ]]; then
 	        printf -- "\nAdoptJDK dependencies\n" |& tee -a "$LOG_FILE"
-		sudo zypper install --auto-agree-with-licenses -y autoconf bzip2 curl cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-ibm-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-six subversion-devel tar wget zlib-devel gawk gzip |& tee -a "$LOG_FILE"
+		sudo zypper install --auto-agree-with-licenses -y autoconf bzip2 curl libnghttp2-devel cyrus-sasl-crammd5 cyrus-sasl-devel gcc gcc-c++ git java-1_8_0-ibm-devel libapr1-devel libcurl-devel libopenssl-devel libtool make patch python-devel python-pip python-six subversion-devel tar wget zlib-devel gawk gzip |& tee -a "$LOG_FILE"
 	fi
     configureAndInstall |& tee -a "$LOG_FILE"
     ;;

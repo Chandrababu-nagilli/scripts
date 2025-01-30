@@ -1,5 +1,5 @@
 #!/bin/bash
-# © Copyright IBM Corporation 2022.
+# © Copyright IBM Corporation 2021, 2023.
 # LICENSE: Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 #
 # Instructions:
@@ -80,7 +80,7 @@ function configureAndInstall() {
     ./config no-threads shared enable-ssl3 enable-ssl3-method -g --prefix=$OPENSSL_PREFIX -DPURIFY
     make -j$(nproc)
     sudo make PATH=$PATH install_sw
-    if [[ ${DISTRO} =~ rhel-7\.[8-9] || ${DISTRO} == sles-12.5 ]]; then
+    if [[ ${DISTRO} =~ rhel-7\.[8-9] || ${DISTRO} == rhel-9.0 || ${DISTRO} == sles-12.5 ]]; then
         sudo ln -s /usr/local/lib64/libssl.so.1.1 /usr/lib64/libssl.so.1.1
         sudo ln -s /usr/local/lib64/libcrypto.so.1.1 /usr/lib64/libcrypto.so.1.1
     fi
@@ -186,7 +186,7 @@ prepare #Check Prequisites
 DISTRO="$ID-$VERSION_ID"
 
 case "$DISTRO" in
-"ubuntu-18.04" | "ubuntu-20.04" | "ubuntu-21.10" | "ubuntu-22.04")
+"ubuntu-18.04" | "ubuntu-20.04" | "ubuntu-22.04")
     printf -- "Installing %s %s for %s \n" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$DISTRO" |& tee -a "$LOG_FILE"
     printf -- "Installing dependencies... it may take some time.\n"
     sudo apt-get update
@@ -206,7 +206,7 @@ case "$DISTRO" in
     source /opt/rh/rh-git227/enable
     configureAndInstall |& tee -a "$LOG_FILE"
     ;;	
-"rhel-8.4" | "rhel-8.5" | "rhel-8.6")
+"rhel-8.4" | "rhel-8.6" | "rhel-9.0")
     printf -- "Installing %s %s for %s \n" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$DISTRO" |& tee -a "$LOG_FILE"
     printf -- "Installing dependencies... it may take some time.\n"
     sudo yum install -y curl tar wget make gcc dos2unix perl patch pcre-devel zlib-devel perl-App-cpanminus git |& tee -a "$LOG_FILE"
@@ -215,13 +215,13 @@ case "$DISTRO" in
 "sles-12.5")
     printf -- "Installing %s %s for %s \n" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$DISTRO" |& tee -a "$LOG_FILE"
     printf -- "Installing dependencies... it may take some time.\n"
-    sudo zypper install -y git curl tar wget make gcc7 dos2unix perl patch pcre-devel gzip zlib-devel which |& tee -a "$LOG_FILE"
+    sudo zypper install -y git curl tar wget make gcc7 dos2unix perl patch pcre-devel gzip zlib-devel libnghttp2-devel which |& tee -a "$LOG_FILE"
     sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc-7 40
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 40
     curl -L https://cpanmin.us | perl - --sudo App::cpanminus
     configureAndInstall |& tee -a "$LOG_FILE"
     ;;
-"sles-15.3")
+"sles-15.3" | "sles-15.4")
     printf -- "Installing %s %s for %s \n" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$DISTRO" |& tee -a "$LOG_FILE"
     printf -- "Installing dependencies... it may take some time.\n"
     sudo zypper install -y git curl tar wget make gcc dos2unix perl patch pcre-devel gzip zlib-devel perl-App-cpanminus |& tee -a "$LOG_FILE"
